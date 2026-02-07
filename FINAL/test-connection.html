@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test Connection</title>
+</head>
+
+<body>
+    <h1>Test Backend Connection</h1>
+    <button onclick="testBackend()">Test Backend</button>
+    <button onclick="testAuth()">Test Auth</button>
+    <button onclick="testSearch()">Test Search</button>
+    <pre id="result"></pre>
+
+    <script>
+        const API_URL = 'http://localhost:5010/api';
+        const token = localStorage.getItem('token');
+
+        function log(msg) {
+            document.getElementById('result').textContent += msg + '\n';
+        }
+
+        async function testBackend() {
+            document.getElementById('result').textContent = '';
+            log('Testing backend connection...');
+            try {
+                const res = await fetch('http://localhost:5010/health');
+                const data = await res.json();
+                log('✅ Backend is running!');
+                log('Response: ' + JSON.stringify(data));
+            } catch (error) {
+                log('❌ Backend not running!');
+                log('Error: ' + error.message);
+            }
+        }
+
+
+        async function testAuth() {
+            document.getElementById('result').textContent = '';
+            log('Testing authentication...');
+            log('Token: ' + (token ? 'Present' : 'Missing'));
+
+            if (!token) {
+                log('❌ No token found. Please sign in first.');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/documents/upload-status`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                log('✅ Authentication works!');
+                log('Response: ' + JSON.stringify(data));
+            } catch (error) {
+                log('❌ Authentication failed!');
+                log('Error: ' + error.message);
+            }
+        }
+
+        async function testSearch() {
+            document.getElementById('result').textContent = '';
+            log('Testing search...');
+
+            if (!token) {
+                log('❌ No token found. Please sign in first.');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/search/query`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query: 'test' })
+                });
+                const data = await res.json();
+                log('Status: ' + res.status);
+                log('Response: ' + JSON.stringify(data, null, 2));
+            } catch (error) {
+                log('❌ Search failed!');
+                log('Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+
+</html>
